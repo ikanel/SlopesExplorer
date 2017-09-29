@@ -12,7 +12,8 @@ namespace Spatial
         {
             List<string> names = new List<string>();
             float latFrom = -90, latTo = 90, lngFrom = -180, lngTo = 180;
-            int angle = 7, vdrop = 30, minlength = 100;
+            int angle = 7, vdrop = 30, minlength = 0, vdroppercent=0, amount=0;
+
             string fileName = null, outputFileName = null;
             var p = new OptionSet() {
     { "lat1=","Lattitude from. Default:-180",  (float v) => latFrom=v },
@@ -24,11 +25,14 @@ namespace Spatial
     { "o|output=","Output kml filename.",  (string v) => outputFileName=v },
     { "a|angle=","Minimum slope angle. Default:7",  (int v) => angle=v },
     { "d|drop=","Minimum vertical drop for the slope. Default: 30",  (int v) => vdrop=v },
+    { "dp|droppercent=","Top N percent of the slopes. Overrides drop if specified.",  (int dp) => vdroppercent=dp },
+    { "n| number of slopes=","Top N slopes by vertical drop. Overrides drop and percent if specified.",  (int n) => amount=n },
+
     { "s|minlength=","Minimum slope length. Default: 100",  (int v) => minlength=v },
     { "l|load", "Load geo-data from  ESRI GRID(ARC ASCII) file to the database.", v => {Console.WriteLine("Loading data from ESRI GRID(ARC ASCII) File.");SrtLoader.LoadTopology(fileName,latFrom,latTo,lngFrom,lngTo,(q)=>{Console.Write("\r{0:f2}%   ", q);});}},
     { "p|preprocess", "Preprocess loaded data.", v => {Console.WriteLine("Preprocessing loaded data. It may take a looooooong time.");DB.Preprocess(angle);}},
-    { "e|echo", "Display slopes information.", v => {Console.WriteLine("Slopes info. Params: min vert drop:{0}, min length:{1}",vdrop,minlength); DisplaySlopesInfo(vdrop,minlength);}},
-    { "x|export", "Exporting results to kml.", v =>{Console.WriteLine("Generating KML from the results.");KmlExporter.GenerateKml(outputFileName,vdrop,minlength); }}
+    { "e|echo", "Display slopes information.", v => {Console.WriteLine("Slopes info. Params: min vert drop:{0}, min length:{1}",vdrop,minlength); DisplaySlopesInfo(vdrop,minlength,amount);}},
+    { "x|export", "Exporting results to kml.", v =>{Console.WriteLine("Generating KML from the results.");KmlExporter.GenerateKml(outputFileName,vdrop,vdroppercent,amount,minlength); }}
 };
 
             List<string> extra;
@@ -69,10 +73,10 @@ namespace Spatial
             Console.WriteLine("{0} Columns, {1} Rows", fi.Cols, fi.Rows);
         }
 
-        static void DisplaySlopesInfo(int minDrop, int minLength)
+        static void DisplaySlopesInfo(int minDrop, int minLength, int amount)
         {
             var cellsize = DB.GetSrtInfo().CellSizeInMeters;
-            foreach (var slope in DB.GetSlopeDrops(minDrop, minLength))
+            foreach (var slope in DB.GetSlopeDrops(minDrop, minLength,amount))
             {
                 var len = slope.Segments * 2 * cellsize;
                 if (slope.Segments == 0) len = 2 * cellsize;

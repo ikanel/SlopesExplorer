@@ -13,13 +13,17 @@ namespace Spatial
 {
     public static class KmlExporter
     {
-        public static void GenerateKml(string fileName, int minDrop, int minLength)
+        public static void GenerateKml(string fileName, int minDrop,int percent, int amount, int minLength)
         {
             if (string.IsNullOrWhiteSpace(fileName)) throw new ApplicationException("Output filename is required");
-            var drops = DB.GetSlopeDrops(minDrop,minLength);
+
+            
+            if (percent > 0 && amount==0)  minDrop=DB.GetMinDropByPercent(percent);
+
+            var drops = DB.GetSlopeDrops(minDrop,minLength,amount);
             if (drops == null || drops.Count() == 0)
             {
-                throw new ApplicationException("Slopes data not found or there are no slopes in the selected area. Please run preprocess(-p) prior to export.");
+                throw new ApplicationException("Slopes data not found or there are no slopes in the selected area. Please change filter conditions or run preprocess(-p) prior to export.");
             }
             Folder fld = new Folder();
 

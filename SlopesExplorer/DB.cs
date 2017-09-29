@@ -29,7 +29,7 @@ namespace Spatial
         {
             var srtInfo = GetSrtInfo();
             var delta = Math.Tan(angle * (Math.PI / 180)) * srtInfo.CellSizeInMeters;
-            Connection.Execute("preprocess", new { delta = delta }, null, 3600*3, CommandType.StoredProcedure);
+            Connection.Execute("preprocess", new { delta = delta }, null, 3600*24, CommandType.StoredProcedure);
         }
 
         public static void StoreSrtInfo(SrtMetaInfo info)
@@ -49,15 +49,22 @@ namespace Spatial
             return Connection.Query<SrtMetaInfo>("SELECT * FROM SrtMetaInfo").FirstOrDefault();
         }
 
-        public static IEnumerable<SlopeDrop> GetSlopeDrops(int minDrop, int minLength)
+        public static IEnumerable<SlopeDrop> GetSlopeDrops(int minDrop, int minLength, int amount)
         {
             var segments = Math.Ceiling(minLength / GetSrtInfo().CellSizeInMeters);
-            return Connection.Query<SlopeDrop>("select ParentID, VertDrop,Segments from max_drops where VertDrop>=@drop and 2*Segments>=@seg order by VertDrop desc", new { drop = minDrop, seg = segments });
+            string minLenghtCondition = minLength == 0 ? "" : "and Segments>=@seg";
+            string top = amount == 0 ? "" : " top "+amount;
+            return Connection.Query<SlopeDrop>($"select {top} ParentID, VertDrop,Segments from max_drops where VertDrop>=@drop {minLenghtCondition} order by VertDrop desc", new { drop = minDrop, seg = segments });
         }
 
         public static IEnumerable<Point> GetSlopeInfo(int ParentID)
         {
-            return Connection.Query<Point>("SELECT distinct Lat,Lng, Row,Col, Elevation as Alt from Results WHERE ParentID=@pid ORDER BY Alt DESC", new { pid = ParentID });
+            return Connection.Query<Point>("get_slope_info", new { ParentID = ParentID },commandType:CommandType.StoredProcedure);
+        }
+
+        public static int GetMinDropByPercent(int percent)
+        {
+            return Connection.ExecuteScalar<int>("get_min_drop_by_percent", new { percent = percent }, commandType: CommandType.StoredProcedure);
         }
 
         public static void AddPoint(Point point)
