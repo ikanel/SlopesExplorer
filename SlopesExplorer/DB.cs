@@ -54,7 +54,7 @@ namespace Spatial
             var segments = Math.Ceiling(minLength / GetSrtInfo().CellSizeInMeters);
             string minLenghtCondition = minLength == 0 ? "" : "and Segments>=@seg";
             string top = amount == 0 ? "" : " top "+amount;
-            return Connection.Query<SlopeDrop>($"select {top} ParentID, VertDrop,Segments from max_drops where VertDrop>=@drop {minLenghtCondition} order by VertDrop desc", new { drop = minDrop, seg = segments });
+            return Connection.Query<SlopeDrop>($"select {top} ParentID, VertDrop,Segments from max_drops where VertDrop>=@drop {minLenghtCondition} order by VertDrop desc", new { drop = minDrop, seg = segments },commandTimeout:3600);
         }
 
         public static IEnumerable<Point> GetSlopeInfo(int ParentID)

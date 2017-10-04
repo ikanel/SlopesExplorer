@@ -30,10 +30,21 @@ namespace Spatial
 
     { "s|minlength=","Minimum slope length. Default: 100",  (int v) => minlength=v },
     { "l|load", "Load geo-data from  ESRI GRID(ARC ASCII) file to the database.", v => {Console.WriteLine("Loading data from ESRI GRID(ARC ASCII) File.");SrtLoader.LoadTopology(fileName,latFrom,latTo,lngFrom,lngTo,(q)=>{Console.Write("\r{0:f2}%   ", q);});}},
-    { "p|preprocess", "Preprocess loaded data.", v => {Console.WriteLine("Preprocessing loaded data. It may take a looooooong time.");DB.Preprocess(angle);}},
+    { "p|preprocess", "Preprocess loaded data.", v => {
+        Console.WriteLine("Preprocessing loaded data. It may take a looooooong time. Started at:"+DateTime.Now);
+        DB.Preprocess(angle);
+        Console.WriteLine("Completed at:"+DateTime.Now);
+    } },
     { "e|echo", "Display slopes information.", v => {Console.WriteLine("Slopes info. Params: min vert drop:{0}, min length:{1}",vdrop,minlength); DisplaySlopesInfo(vdrop,minlength,amount);}},
-    { "x|export", "Exporting results to kml.", v =>{Console.WriteLine("Generating KML from the results.");KmlExporter.GenerateKml(outputFileName,vdrop,vdroppercent,amount,minlength); }}
-};
+    { "x|export", "Exporting results to kml.", v =>{Console.WriteLine("Generating KML from the results.");
+        Console.WriteLine("Started at:"+DateTime.Now);
+        KmlExporter.GenerateKml(outputFileName,vdrop,vdroppercent,amount,minlength);
+        Console.WriteLine("Completed at:"+DateTime.Now);
+    } }
+
+
+
+        };
 
             List<string> extra;
             try
