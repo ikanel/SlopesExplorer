@@ -12,8 +12,7 @@ namespace Spatial
         {
             List<string> names = new List<string>();
             float latFrom = -90, latTo = 90, lngFrom = -180, lngTo = 180;
-            int angle = 7, vdrop = 30, minlength = 0, vdroppercent=0, amount=0;
-
+            int angle = 7, vdrop = 30, minlength = 0, vdroppercent = 0, amount = 0;
             string fileName = null, outputFileName = null;
             var p = new OptionSet() {
     { "lat1=","Lattitude from. Default:-180",  (float v) => latFrom=v },
@@ -35,12 +34,19 @@ namespace Spatial
         DB.Preprocess(angle);
         Console.WriteLine("Completed at:"+DateTime.Now);
     } },
-    { "e|echo", "Display slopes information.", v => {Console.WriteLine("Slopes info. Params: min vert drop:{0}, min length:{1}",vdrop,minlength); DisplaySlopesInfo(vdrop,minlength,amount);}},
-    { "x|export", "Exporting results to kml.", v =>{Console.WriteLine("Generating KML from the results.");
+     { "z|save2db","Save results to databaZe 'results' table. Default:false",
+            v => {
+                Console.WriteLine("Storing result to DB.\nStarted at:"+DateTime.Now);
+                DB.StoreResultsToDatabase(vdroppercent,amount,vdrop);
+                Console.WriteLine("Finished at:"+DateTime.Now);
+            }},
+     { "e|echo", "Display slopes information.", v => {Console.WriteLine("Slopes info. Params: min vert drop:{0}, min length:{1}",vdrop,minlength); DisplaySlopesInfo(vdrop,minlength,amount);}},
+    { "x|export", "Exporting results to kml.",
+        v =>{Console.WriteLine("Generating KML from the results.");
         Console.WriteLine("Started at:"+DateTime.Now);
         KmlExporter.GenerateKml(outputFileName,vdrop,vdroppercent,amount,minlength);
         Console.WriteLine("Completed at:"+DateTime.Now);
-    } }
+            }}
 
 
 
@@ -87,7 +93,7 @@ namespace Spatial
         static void DisplaySlopesInfo(int minDrop, int minLength, int amount)
         {
             var cellsize = DB.GetSrtInfo().CellSizeInMeters;
-            foreach (var slope in DB.GetSlopeDrops(minDrop, minLength,amount))
+            foreach (var slope in DB.GetSlopeDrops(minDrop, minLength, amount))
             {
                 var len = slope.Segments * 2 * cellsize;
                 if (slope.Segments == 0) len = 2 * cellsize;

@@ -8,6 +8,7 @@ namespace Spatial
 {
     public class SrtMetaInfo
     {
+        public string Name;
         public int Cols;
         public int Rows;
         public decimal XLeft;

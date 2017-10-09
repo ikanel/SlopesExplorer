@@ -26,7 +26,7 @@ namespace Spatial
                 int row = 1;
                 int column = 1;
 
-                SrtMetaInfo mi = GetSrtMetaInfo(sr);
+                SrtMetaInfo mi = GetSrtMetaInfo(sr,fi.Name);
                 DB.StoreSrtInfo(mi);
 
                 int startCol = 1, endCol = mi.Cols, startRow = 1, endRow = mi.Rows;
@@ -106,14 +106,15 @@ namespace Spatial
             using (FileStream fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (StreamReader sr = new StreamReader(fileName))
             {
-                return GetSrtMetaInfo(sr);
+                return GetSrtMetaInfo(sr,fs.Name);
             }
 
         }
-        public static SrtMetaInfo GetSrtMetaInfo(StreamReader sr)
+        public static SrtMetaInfo GetSrtMetaInfo(StreamReader sr, string name)
         {
             SrtMetaInfo res = new SrtMetaInfo
             {
+                Name=name,
                 Cols = GetIntFromText(sr.ReadLine()),
                 Rows = GetIntFromText(sr.ReadLine()),
                 XLeft = GetDecFromText(sr.ReadLine()),

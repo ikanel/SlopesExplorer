@@ -36,6 +36,7 @@ namespace Spatial
         {
             Connection.Execute("store_srt_meta_info", new
             {
+                Name=info.Name,
                 Cols = info.Cols,
                 Rows = info.Rows,
                 XLeft = info.XLeft,
@@ -61,6 +62,12 @@ namespace Spatial
         {
             return Connection.Query<Point>("get_slope_info", new { ParentID = ParentID },commandType:CommandType.StoredProcedure);
         }
+        public static void StoreResultsToDatabase(int percent, int amount, int minDrop)
+        {
+            if (percent > 0 && amount == 0) minDrop = DB.GetMinDropByPercent(percent);
+            Connection.Execute("FILL_RESULTS_TABLE", new { amount=amount, minDrop=minDrop }, commandType: CommandType.StoredProcedure, commandTimeout:3600);
+        }
+
 
         public static int GetMinDropByPercent(int percent)
         {

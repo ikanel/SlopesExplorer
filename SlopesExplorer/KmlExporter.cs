@@ -16,10 +16,7 @@ namespace Spatial
         public static void GenerateKml(string fileName, int minDrop,int percent, int amount, int minLength)
         {
             if (string.IsNullOrWhiteSpace(fileName)) throw new ApplicationException("Output filename is required");
-
-            
             if (percent > 0 && amount==0)  minDrop=DB.GetMinDropByPercent(percent);
-
             var drops = DB.GetSlopeDrops(minDrop,minLength,amount);
             if (drops == null || drops.Count() == 0)
             {
