@@ -45,6 +45,19 @@ namespace Spatial
                 CellsizeInMeters = info.CellSizeInMeters
             }, commandType: CommandType.StoredProcedure);
         }
+
+        public static void StoreResult(double lat, double lon, int alt, int zoneId, int parentID)
+        {
+            Connection.Execute("store_result", new
+            {
+                Lat = lat,
+                Lng = lon,
+                ZoneID = zoneId,
+                Alt = alt,
+                ParentID=parentID
+              
+            }, commandType: CommandType.StoredProcedure);
+        }
         public static SrtMetaInfo GetSrtInfo()
         {
             return Connection.Query<SrtMetaInfo>("SELECT * FROM SrtMetaInfo").FirstOrDefault();
@@ -57,21 +70,33 @@ namespace Spatial
             string top = amount == 0 ? "" : " top "+amount;
             return Connection.Query<SlopeDrop>($"select {top} ParentID, VertDrop,Segments from max_drops where VertDrop>=@drop {minLenghtCondition} order by VertDrop desc", new { drop = minDrop, seg = segments },commandTimeout:3600);
         }
+        public static IEnumerable<SlopeDrop> GetSlopeDropsFromResults(int? minDrop, int? amount)
+        {
+            return Connection.Query<SlopeDrop>($"GET_TOP_RESULTS", new { amount=(amount>0?amount:null), vertDrop = minDrop>0?minDrop:null }, commandTimeout: 3600, commandType:CommandType.StoredProcedure);
+        }
 
         public static IEnumerable<Point> GetSlopeInfo(int ParentID)
         {
-            return Connection.Query<Point>("get_slope_info", new { ParentID = ParentID },commandType:CommandType.StoredProcedure);
+            return Connection.Query<Point>("get_slope_info", new { ParentID = ParentID },commandType:CommandType.StoredProcedure, commandTimeout: 3600);
         }
+        public static IEnumerable<Point> GetSlopeInfoFromResults(int ZoneID, int ParentID)
+        {
+            return Connection.Query<Point>("get_slope_info_from_results", new { ParentID = ParentID, ZoneID=ZoneID }, commandType: CommandType.StoredProcedure, commandTimeout: 3600);
+        }
+
         public static void StoreResultsToDatabase(int percent, int amount, int minDrop)
         {
             if (percent > 0 && amount == 0) minDrop = DB.GetMinDropByPercent(percent);
             Connection.Execute("FILL_RESULTS_TABLE", new { amount=amount, minDrop=minDrop }, commandType: CommandType.StoredProcedure, commandTimeout:3600);
         }
-
-
+        public static int CreateZone(string name, double? lat1=null, double? lng1 = null, double? lat2 = null, double? lng2 = null)
+        {
+          return  Connection.ExecuteScalar<int>("create_zone", new { name=name,lat1=lat1,lng1=lng1,lat2=lat2,lng2=lng2 }, commandType: CommandType.StoredProcedure);
+        }
+        
         public static int GetMinDropByPercent(int percent)
         {
-            return Connection.ExecuteScalar<int>("get_min_drop_by_percent", new { percent = percent }, commandType: CommandType.StoredProcedure);
+            return Connection.ExecuteScalar<int>("get_min_drop_by_percent", new { percent = percent }, commandType: CommandType.StoredProcedure, commandTimeout: 3600);
         }
 
         public static void AddPoint(Point point)

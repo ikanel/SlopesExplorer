@@ -12,6 +12,7 @@ namespace Spatial
         {
             List<string> names = new List<string>();
             float latFrom = -90, latTo = 90, lngFrom = -180, lngTo = 180;
+            bool kmlFromResults = false;
             int angle = 7, vdrop = 30, minlength = 0, vdroppercent = 0, amount = 0;
             string fileName = null, outputFileName = null;
             var p = new OptionSet() {
@@ -28,6 +29,8 @@ namespace Spatial
     { "n| number of slopes=","Top N slopes by vertical drop. Overrides drop and percent if specified.",  (int n) => amount=n },
 
     { "s|minlength=","Minimum slope length. Default: 100",  (int v) => minlength=v },
+    { "r|kmlFromResults", "Use Results as a source for the kml generation", v => kmlFromResults=true },
+
     { "l|load", "Load geo-data from  ESRI GRID(ARC ASCII) file to the database.", v => {Console.WriteLine("Loading data from ESRI GRID(ARC ASCII) File.");SrtLoader.LoadTopology(fileName,latFrom,latTo,lngFrom,lngTo,(q)=>{Console.Write("\r{0:f2}%   ", q);});}},
     { "p|preprocess", "Preprocess loaded data.", v => {
         Console.WriteLine("Preprocessing loaded data. It may take a looooooong time. Started at:"+DateTime.Now);
@@ -41,10 +44,11 @@ namespace Spatial
                 Console.WriteLine("Finished at:"+DateTime.Now);
             }},
      { "e|echo", "Display slopes information.", v => {Console.WriteLine("Slopes info. Params: min vert drop:{0}, min length:{1}",vdrop,minlength); DisplaySlopesInfo(vdrop,minlength,amount);}},
-    { "x|export", "Exporting results to kml.",
+     { "m|import", "Import points from kml to results table.", v => { KmlExporter.ParseKml(fileName);}},
+     { "x|export", "Exporting results to kml.",
         v =>{Console.WriteLine("Generating KML from the results.");
         Console.WriteLine("Started at:"+DateTime.Now);
-        KmlExporter.GenerateKml(outputFileName,vdrop,vdroppercent,amount,minlength);
+        KmlExporter.GenerateKml(outputFileName,vdrop,vdroppercent,amount,minlength,kmlFromResults);
         Console.WriteLine("Completed at:"+DateTime.Now);
             }}
 

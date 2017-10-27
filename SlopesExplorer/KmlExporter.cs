@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Device.Location;
 using System.IO;
 using System.Linq;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,25 +14,26 @@ namespace Spatial
 {
     public static class KmlExporter
     {
-        public static void GenerateKml(string fileName, int minDrop,int percent, int amount, int minLength)
+        public static void GenerateKml(string fileName, int minDrop,int percent, int amount, int minLength, bool fromResults=false)
         {
             if (string.IsNullOrWhiteSpace(fileName)) throw new ApplicationException("Output filename is required");
             if (percent > 0 && amount==0)  minDrop=DB.GetMinDropByPercent(percent);
-            var drops = DB.GetSlopeDrops(minDrop,minLength,amount);
+            var drops = fromResults?DB.GetSlopeDropsFromResults(minDrop,amount): DB.GetSlopeDrops(minDrop,minLength,amount);
+
             if (drops == null || drops.Count() == 0)
             {
                 throw new ApplicationException("Slopes data not found or there are no slopes in the selected area. Please change filter conditions or run preprocess(-p) prior to export.");
             }
             Folder fld = new Folder();
 
-            var srtInfo = DB.GetSrtInfo();
+          //  var srtInfo = DB.GetSrtInfo();
 
             // This will be the location of the Placemark.
             foreach (var slope in drops)
             {
                 LineString line = new LineString();
                 line.Coordinates = new CoordinateCollection();
-                var points = DB.GetSlopeInfo(slope.ParentID);
+                var points = fromResults?DB.GetSlopeInfoFromResults(slope.ZoneID,slope.ParentID):DB.GetSlopeInfo(slope.ParentID);
                 line.Coordinates = new CoordinateCollection(ExtractPoint(points));
                 Placemark placemark = new Placemark();
                 placemark.Geometry = line;
@@ -41,12 +43,36 @@ namespace Spatial
             }
             // This allows us to save and Element easily.
             KmlFile kml = KmlFile.Create(fld, false);
-
             using (var stream = System.IO.File.Open(fileName, FileMode.Create))
             {
                 kml.Save(stream);
             }
+        }
 
+        public static void ParseKml(string fileName)
+        {
+            KmlFile kml;
+            using (var stream = System.IO.File.Open(fileName, FileMode.Open))
+            {
+                kml=KmlFile.Load(stream);
+            }
+            int parentID = 1;
+            FileInfo fi = new FileInfo(fileName);
+            int zoneId = DB.CreateZone(fi.Name);
+            
+            
+            DB.StoreSrtInfo(new SrtMetaInfo()
+            {
+                Name = fi.Name,
+            });
+            foreach (var coords in kml.Root.Flatten().Where(q=>q is CoordinateCollection).Select(s=>(CoordinateCollection)s))
+            {
+                foreach (var coord in coords)
+                {
+                    DB.StoreResult(coord.Latitude,coord.Longitude,(int)coord.Altitude,zoneId,parentID);
+                }
+                parentID++;
+            }
         }
 
         static double GetLineLength(CoordinateCollection coords)

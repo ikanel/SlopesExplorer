@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Spatial
+namespace GeoNamesClient
 {
-   public class SlopeDrop
+   public class Result
     {
-        public int ZoneID {get; set; }
+        public int ZoneID { get; set; }
         public int ParentID { get; set; }
-        public int VertDrop { get; set; }
-        public int Segments { get; set; }
+        public double Lat { get; set; }
+        public double Lng { get; set; }
     }
 }
