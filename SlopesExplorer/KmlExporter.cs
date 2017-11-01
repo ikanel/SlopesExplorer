@@ -37,8 +37,17 @@ namespace Spatial
                 line.Coordinates = new CoordinateCollection(ExtractPoint(points));
                 Placemark placemark = new Placemark();
                 placemark.Geometry = line;
+                
                 var length = GetLineLength(line.Coordinates);
-                placemark.Name = string.Format("H{0}:L{1}:A{2}", slope.VertDrop, Math.Round(length),Math.Round(Math.Atan(slope.VertDrop/length)*(180.0 / Math.PI)));
+                placemark.Name = 
+                    string.IsNullOrWhiteSpace(slope.MountName)==false?
+                    string.Format("{0} ({1})",slope.MountName??"",slope.Region??"").Trim():
+                string.Format("H{0}:L{1}:A{2}", slope.VertDrop, Math.Round(length), Math.Round(Math.Atan(slope.VertDrop / length) * (180.0 / Math.PI))).Trim();
+                placemark.Description = new Description()
+                {
+                    Text = $"Vertical Drop:{slope.VertDrop}m/{Math.Round(slope.VertDrop*3.28084)}ft\nLength:{Math.Round(length)}m/{Math.Round(length*3.28084)}ft\nAvg.incline:{Math.Round(Math.Atan(slope.VertDrop / length) * (180.0 / Math.PI))} degrees"
+                };
+                
                 fld.AddFeature(placemark);
             }
             // This allows us to save and Element easily.

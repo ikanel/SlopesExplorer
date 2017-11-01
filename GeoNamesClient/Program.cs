@@ -43,17 +43,43 @@ namespace GeoNamesClient
                 var csb = rc.Execute<dynamic>(request);
                 try
                 {
-                    var country = csb.Data["countryName"];
-                    var name = rnb.Data["geonames"][0]["name"];
-                    string county;
+                    string country;
+                    try
+                    {
+                        country = csb.Data["countryName"];
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        country = rnb.Data["geonames"][0]["countryName"];
+                    }
+                  
+                    string county = string.Empty; 
+                    string name = string.Empty;
+                    try
+                    {
+                        name = rnb.Data["geonames"][0]["name"];
+                    }
+                    catch (System.Collections.Generic.KeyNotFoundException)
+                    {
+                        //nothing to do here
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        //nothing to do here
+                    }
                     try
                     {
                         county = csb.Data["adminName1"];
                     }
                     catch (System.Collections.Generic.KeyNotFoundException)
                     {
-                        county = string.Empty;
+                        //nothing to do here
                     }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        //nothing to do here
+                    }
+
                     Connection.Execute("UPDATE TOP_Results SET Country=@c, Region=@r,MountName=@n WHERE ZoneID=@zid and ParentID=@pid", new { r = county, c = country, n = name, zid = r.ZoneID, pid = r.ParentID });
                     Console.WriteLine($"{name} {country} {county}");
                 }

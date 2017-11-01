@@ -12,5 +12,9 @@ namespace Spatial
         public int ParentID { get; set; }
         public int VertDrop { get; set; }
         public int Segments { get; set; }
+        public string Country { get; set; }
+        public string Region { get; set; }
+        public string MountName { get; set; }
+
     }
 }
